@@ -4,41 +4,73 @@ using UnityEngine;
 
 public class playerMovement : MonoBehaviour
 {
-    private CharacterController controller;
-    private Vector3 playerVelocity;
-    public bool isGrounded;
-    private float playerSpeed = 2.0f;
-    private float jumpHeight = 1.0f;
-    private float gravityValue = -9.81f;
+    private CharacterController _characterController;
 
-    private void Start()
+    public float Speed = 5.0f;
+    public float runSpeed = 12;
+    public float jumpSpeed = 8;
+    public float RotationSpeed = 240.0f;
+
+    private float Gravity = 20.0f;
+    public Animator anim;
+    private Vector3 _moveDir = Vector3.zero;
+    public bool isGrounded;
+
+    // Use this for initialization
+    void Start()
     {
-        controller = gameObject.GetComponent<CharacterController>();
+        //_animator = GetComponent<Animator>();
+        _characterController = GetComponent<CharacterController>();
     }
 
+    // Update is called once per frame
     void Update()
     {
-        //groundedPlayer = controller.isGrounded;
-        if (isGrounded && playerVelocity.y < 0)
+        // Get Input for axis
+        float h = Input.GetAxis("Horizontal");
+        float v = Input.GetAxis("Vertical");
+
+        // Calculate the forward vector
+        Vector3 camForward_Dir = Vector3.Scale(Camera.main.transform.forward, new Vector3(1, 0, 1)).normalized;
+        Vector3 move = v * camForward_Dir + h * Camera.main.transform.right;
+
+        if (move.magnitude > 1f) move.Normalize();
+
+        // Calculate the rotation for the player
+        move = transform.InverseTransformDirection(move);
+
+        // Get Euler angles
+        float turnAmount = Mathf.Atan2(move.x, move.z);
+
+        transform.Rotate(0, turnAmount * RotationSpeed * Time.deltaTime, 0);
+
+        if (_characterController.isGrounded)
         {
-            playerVelocity.y = 0f;
+            // _animator.SetBool("run", move.magnitude> 0);
+
+            _moveDir = transform.forward * move.magnitude;
+
+            if (Input.GetKey(KeyCode.LeftShift))
+            {
+                _moveDir *= runSpeed;
+            }
+            else {
+                _moveDir *= Speed;
+            }
+            
+
+            if (Input.GetKeyDown(KeyCode.Space))
+            {
+                _moveDir.y = jumpSpeed;
+            }
+
         }
 
-        Vector3 move = new Vector3(Input.GetAxis("Horizontal"), 0, Input.GetAxis("Vertical"));
-        controller.Move(move * Time.deltaTime * playerSpeed);
+        _moveDir.y -= Gravity * Time.deltaTime;
 
-        if (move != Vector3.zero)
-        {
-            gameObject.transform.forward = move;
-        }
-
-        // Changes the height position of the player..
-        if (Input.GetButtonDown("Jump") && isGrounded)
-        {
-            playerVelocity.y += Mathf.Sqrt(jumpHeight * -3.0f * gravityValue);
-        }
-
-        playerVelocity.y += gravityValue * Time.deltaTime;
-        controller.Move(playerVelocity * Time.deltaTime);
+        _characterController.Move(_moveDir * Time.deltaTime);
+        Vector3 NoY = _moveDir;
+        NoY.y = 0;
+        anim.SetFloat("speed", NoY.magnitude);
     }
 }
