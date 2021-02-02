@@ -15,6 +15,22 @@ public class roomManager : NetworkRoomManager
     /// <returns>true unless some code in here decides it needs to abort the replacement</returns>
     /// 
     public GameObject StartButton;
+
+    public void SetHostname(string hostname)
+    {
+        networkAddress = hostname;
+    }
+  
+
+    public override GameObject OnServerAddPlayer(NetworkConnection conn)
+    {
+        GameObject player = base.OnServerAddPlayer(conn);
+        player.GetComponent<Lobby_RoomPlayer>().playerName = "lalalalala";
+
+        return null;
+    }
+
+
     public override bool OnRoomServerSceneLoadedForPlayer(NetworkConnection conn, GameObject roomPlayer, GameObject gamePlayer)
     {
         //PlayerScore playerScore = gamePlayer.GetComponent<PlayerScore>();
@@ -91,6 +107,11 @@ public class roomManager : NetworkRoomManager
         {
             ServerChangeScene(GameplayScene);
         }
+    }
+
+    public void ClientConnect() {
+        networkAddress = "localhost";
+        StartClient();
     }
 }
 

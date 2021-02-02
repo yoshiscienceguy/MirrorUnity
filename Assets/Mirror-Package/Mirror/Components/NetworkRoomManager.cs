@@ -309,12 +309,12 @@ namespace Mirror
         /// <para>The default implementation for this function creates a new player object from the playerPrefab.</para>
         /// </summary>
         /// <param name="conn">Connection from client.</param>
-        public override void OnServerAddPlayer(NetworkConnection conn)
+        public override GameObject OnServerAddPlayer(NetworkConnection conn)
         {
             if (IsSceneActive(RoomScene))
             {
                 if (roomSlots.Count == maxConnections)
-                    return;
+                    return null;
 
                 allPlayersReady = false;
 
@@ -325,9 +325,12 @@ namespace Mirror
                     newRoomGameObject = Instantiate(roomPlayerPrefab.gameObject, Vector3.zero, Quaternion.identity);
 
                 NetworkServer.AddPlayerForConnection(conn, newRoomGameObject);
+                return newRoomGameObject;
             }
             else
                 OnRoomServerAddPlayer(conn);
+
+            return null;
         }
 
         public void RecalculateRoomPlayerIndices()

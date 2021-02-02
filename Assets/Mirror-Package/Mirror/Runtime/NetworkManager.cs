@@ -1321,7 +1321,7 @@ namespace Mirror
         /// <para>The default implementation for this function creates a new player object from the playerPrefab.</para>
         /// </summary>
         /// <param name="conn">Connection from client.</param>
-        public virtual void OnServerAddPlayer(NetworkConnection conn)
+        public virtual GameObject OnServerAddPlayer(NetworkConnection conn)
         {
             Transform startPos = GetStartPosition();
             GameObject player = startPos != null
@@ -1329,6 +1329,7 @@ namespace Mirror
                 : Instantiate(playerPrefab);
 
             NetworkServer.AddPlayerForConnection(conn, player);
+            return player;
         }
 
         // Deprecated 5/2/2020
