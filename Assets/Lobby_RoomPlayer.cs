@@ -9,50 +9,65 @@ using System;
 public class Lobby_RoomPlayer : NetworkRoomPlayer
 {
     static readonly ILogger logger = LogFactory.GetLogger(typeof(Lobby_RoomPlayer));
-    
+    private roomManager manager;
     [SyncVar]
     public string playerName;
-    public static event Action<Lobby_RoomPlayer, string> OnMessage;
-    [Command]
-    public void CmdSend(string message)
-    {
-        if (message.Trim() != "")
-            RpcReceive(message.Trim());
-    }
-
-    [ClientRpc]
-    public void RpcReceive(string message)
-    {
-        OnMessage?.Invoke(this, message);
-    }
 
     public override void OnStartClient()
     {
         if (logger.LogEnabled()) logger.LogFormat(LogType.Log, "OnStartClient {0}", SceneManager.GetActiveScene().path);
-        
+
         base.OnStartClient();
     }
 
+    public void updateView() {
+        RpcSetPlayerName();
+    }
     public override void OnClientEnterRoom()
     {
         if (logger.LogEnabled()) logger.LogFormat(LogType.Log, "OnClientEnterRoom {0}", SceneManager.GetActiveScene().path);
-       
-        Transform playerList = GameObject.Find("Players").transform;
-        playerList.GetChild((int)netId).gameObject.SetActive(true);
-        playerList.GetChild((int)netId).GetComponentInChildren<Text>().text = playerName + netId.ToString();
-        RefreshView((int)netId);
+        SetPlayerName(); 
+        CmdSendNameToServer();
         
-
-  
+    }
+    
+    public override void OnStartLocalPlayer()
+    {
+        base.OnStartLocalPlayer();
+        SetPlayerName();
+        
+    }
+    [Client]
+    void SetPlayerName()
+    {
+        if(isLocalPlayer)
+            playerName = GameObject.Find("Canvas").transform.GetChild(0).GetChild(0).GetComponentInChildren<InputField>().text;
     }
 
-    public void RefreshView(int Cid) {
-        if (!isLocalPlayer)
-            return;
+    [Command]
+    void CmdSendNameToServer()
+    {
+        
+        RpcSetPlayerName();
+    }
+    [ClientRpc]
+    void RpcSetPlayerName()
+    {
+        if (manager == null)
+        {
+            manager = GameObject.Find("Room Manager").GetComponent<roomManager>();
+        }
         Transform playerList = GameObject.Find("Players").transform;
-        playerList.GetChild(Cid).GetChild(1).gameObject.SetActive(true);
-        playerList.GetComponentInChildren<Button>().onClick.AddListener(readyUp);
+        for (int i = 0; i < manager.roomSlots.Count; i++) {
+            Lobby_RoomPlayer p = manager.roomSlots[i].GetComponent<Lobby_RoomPlayer>();
+            playerList.GetChild(i).gameObject.SetActive(true);
+            playerList.GetChild(i).GetChild(1).gameObject.SetActive(true);
+            playerList.GetChild(i).GetComponentInChildren<Button>().onClick.AddListener(readyUp);
+            playerList.GetChild(i).GetComponentInChildren<Text>().text = p.playerName;
+        }
     }
+
+
 
     public override void OnClientExitRoom()
     {
@@ -64,7 +79,8 @@ public class Lobby_RoomPlayer : NetworkRoomPlayer
         if (logger.LogEnabled()) logger.LogFormat(LogType.Log, "ReadyStateChanged {0}", newReadyState);
     }
 
-    public void readyUp() {
+    public void readyUp()
+    {
         CmdChangeReadyState(true);
     }
 }

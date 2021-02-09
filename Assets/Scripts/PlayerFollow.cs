@@ -6,7 +6,7 @@ public class PlayerFollow : MonoBehaviour {
 
     public Transform PlayerTransform;
 
-    private Vector3 _cameraOffset;
+    public Vector3 _cameraOffset;
 
     [Range(0.01f, 1.0f)]
     public float SmoothFactor = 0.5f;
@@ -19,13 +19,20 @@ public class PlayerFollow : MonoBehaviour {
 
 	// Use this for initialization
 	void Start () {
+        if (PlayerTransform == null) {
+            return;
+        }
+
         _cameraOffset = transform.position - PlayerTransform.position;	
 	}
 	
 	// LateUpdate is called after Update methods
 	void LateUpdate () {
-
-        if(RotateAroundPlayer)
+        if (PlayerTransform == null)
+        {
+            return;
+        }
+        if (RotateAroundPlayer)
         {
             Quaternion camTurnAngle =
                 Quaternion.AngleAxis(Input.GetAxis("Mouse X") * RotationsSpeed, Vector3.up);

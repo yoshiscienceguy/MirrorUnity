@@ -19,8 +19,13 @@ public class playerMovement : MonoBehaviour
     // Use this for initialization
     void Start()
     {
+        
+        Camera.main.GetComponent<PlayerFollow>().PlayerTransform = transform;
+        Camera.main.GetComponent<PlayerFollow>()._cameraOffset = new Vector3(0, 2, 7) ;
         //_animator = GetComponent<Animator>();
+        
         _characterController = GetComponent<CharacterController>();
+
     }
 
     // Update is called once per frame

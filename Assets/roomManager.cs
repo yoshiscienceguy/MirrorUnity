@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 using UnityEngine.SceneManagement;
 using Mirror;
 public class roomManager : NetworkRoomManager
@@ -14,27 +15,68 @@ public class roomManager : NetworkRoomManager
     /// <param name="gamePlayer"></param>
     /// <returns>true unless some code in here decides it needs to abort the replacement</returns>
     /// 
-    public GameObject StartButton;
 
+    Lobby_RoomPlayer localPlayer;
+
+    void find_LocalPlayer()
+    {
+        //Check to see if the player is loaded in yet
+        if (ClientScene.localPlayer == null)
+            return;
+        
+        localPlayer = ClientScene.localPlayer.GetComponent<Lobby_RoomPlayer>();
+    }
+
+    private void Update()
+    {
+        if (singleton.isNetworkActive)
+        {
+            //GameReadyCheck();
+            // GameOverCheck();
+            if (localPlayer == null)
+            {
+                find_LocalPlayer();
+            }
+            
+        }
+        else
+        {
+            localPlayer = null;
+        }
+    }
+
+
+    public GameObject StartButton;
+    
     public void SetHostname(string hostname)
     {
         networkAddress = hostname;
     }
-  
+
+    public override void OnRoomClientEnter()
+    {
+        base.OnRoomClientEnter();
+        foreach (Lobby_RoomPlayer p in roomSlots) {
+            //p.updateView();
+        }
+        
+    }
 
     public override GameObject OnServerAddPlayer(NetworkConnection conn)
     {
-        GameObject player = base.OnServerAddPlayer(conn);
-        player.GetComponent<Lobby_RoomPlayer>().playerName = "lalalalala";
+        base.OnServerAddPlayer(conn);
+
+        //GameObject player = base.OnServerAddPlayer(conn);
+        //player.GetComponent<Lobby_RoomPlayer>().playerName = username.text;
 
         return null;
     }
-
 
     public override bool OnRoomServerSceneLoadedForPlayer(NetworkConnection conn, GameObject roomPlayer, GameObject gamePlayer)
     {
         //PlayerScore playerScore = gamePlayer.GetComponent<PlayerScore>();
         //playerScore.index = roomPlayer.GetComponent<NetworkRoomPlayer>().index;
+       
         return true;
     }
 
@@ -98,7 +140,6 @@ public class roomManager : NetworkRoomManager
 
     public void HostGame() {
         StartHost();
-    
     }
     
     public void StartGame()
@@ -111,7 +152,10 @@ public class roomManager : NetworkRoomManager
 
     public void ClientConnect() {
         networkAddress = "localhost";
+       
         StartClient();
+       
+
     }
 }
 
